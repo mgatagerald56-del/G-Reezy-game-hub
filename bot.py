@@ -3,7 +3,6 @@ import os, re
 app = Flask(__name__)
 SHOP_NAME = "G Reezy Game Hub"
 MPESA_NUMBER = "0774311399"
-WHATSAPP_NUMBER = "255774311399"
 PRICES = {
     "controller": 120000,
     "headset": 85000,
@@ -28,8 +27,8 @@ p.sub { text-align:center; color:#333; }
 .bot { background:#e0e0e0; padding:8px; border-radius:8px; margin:5px 0; }
 input { width:100%; padding:12px; border:2px solid #107C10; border-radius:8px; box-sizing:border-box; }
 button.send { width:100%; padding:12px; background:#107C10; color:white; border:none; border-radius:8px; margin-top:10px; font-size:16px; font-weight:bold; }
-button.wa { width:100%; padding:12px; background:#25D366; color:white; border:none; border-radius:8px; margin-top:10px; font-size:16px; font-weight:bold; display:none; }
-button.share { width:100%; padding:12px; background:#25D366; color:white; border:none; border-radius:8px; margin-top:10px; font-size:16px; font-weight:bold; }
+a.wa { display:none; width:100%; padding:12px; background:#25D366; color:white; border:none; border-radius:8px; margin-top:10px; font-size:16px; font-weight:bold; text-align:center; text-decoration:none; box-sizing:border-box; }
+a.share { display:block; width:100%; padding:12px; background:#25D366; color:white; border:none; border-radius:8px; margin-top:10px; font-size:16px; font-weight:bold; text-align:center; text-decoration:none; box-sizing:border-box; }
 small { display:block; text-align:center; margin-top:10px; color:#555; }
 </style>
 </head>
@@ -42,40 +41,42 @@ small { display:block; text-align:center; margin-top:10px; color:#555; }
 </div>
 <input id="name" placeholder="Your Name e.g. Eric">
 <input id="msg" placeholder="Type here... price / 2 controller / quit" style="margin-top:10px;">
-<button class="send" onclick="send()">Send ➤</button>
-<button class="wa" id="orderBtn" onclick="orderWhatsApp()">Send This Order to G Reezy on WhatsApp ✅</button>
-<button class="share" onclick="share()">Share hii link kwa WhatsApp 📱</button>
+<button class="send" onclick="sendMsg()">Send ➤</button>
+<a class="wa" id="orderBtn" href="#" target="_blank">Send This Order to G Reezy on WhatsApp ✅</a>
+<a class="share" id="shareBtn" href="#" target="_blank">Share hii link kwa WhatsApp 📱</a>
 <small>Pay via M-Pesa to 0774311399</small>
 </div>
 <script>
-let lastOrder = "";
-let lastName = "";
-function send(){
-  let n = document.getElementById('name').value || "Gamer";
+var lastOrder = "";
+var lastName = "";
+function sendMsg(){
+  var n = document.getElementById('name').value || "Gamer";
   lastName = n;
-  let m = document.getElementById('msg').value;
-  if(!m) return;
-  let chat = document.getElementById('chat');
-  chat.innerHTML += `<div class="user"><b>${n}:</b> ${m}</div>`;
+  var m = document.getElementById('msg').value;
+  if(!m){ return; }
+  var chat = document.getElementById('chat');
+  chat.innerHTML += '<div class="user"><b>' + n + ':</b> ' + m + '</div>';
   document.getElementById('msg').value = "";
   fetch('/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name:n, message:m})})
-  .then(r=>r.json()).then(d=>{
-    chat.innerHTML += `<div class="bot"><b>Bot:</b> ${d.reply}</div>`;
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    chat.innerHTML += '<div class="bot"><b>Bot:</b> ' + d.reply + '</div>';
     chat.scrollTop = chat.scrollHeight;
     if(d.order){
       lastOrder = d.order;
-      document.getElementById('orderBtn').style.display = "block";
+      var text = "Hi G Reezy! I want to order from G Reezy Game Hub:\n" + lastOrder + "\nMy Name: " + lastName + "\nMy Location: ";
+      var btn = document.getElementById('orderBtn');
+      btn.href = 'https://wa.me/255774311399?text=' + encodeURIComponent(text);
+      btn.style.display = "block";
     }
   });
 }
-function orderWhatsApp(){
-  let text = "Hi G Reezy! I want to order from G Reezy Game Hub:\n" + lastOrder + "\nMy Name: " + lastName + "\nMy Location: ";
-  window.open('https://wa.me/255774311399?text=' + encodeURIComponent(text));
+function setupShare(){
+  var link = window.location.href;
+  var btn = document.getElementById('shareBtn');
+  btn.href = 'https://wa.me/?text=' + encodeURIComponent('Check G Reezy Game Hub 🎮 ' + link);
 }
-function share(){
-  let link = window.location.href;
-  window.open('https://wa.me/?text=' + encodeURIComponent('Check G Reezy Game Hub 🎮 ' + link));
-}
+setupShare();
 </script>
 </body>
 </html>
