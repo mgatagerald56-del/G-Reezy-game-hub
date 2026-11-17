@@ -70,7 +70,7 @@ def backup_brain(msg):
     total = 0; lines = []
     for key, price in PRICES.items():
         if key in m:
-            qty_match = re.search(r"(\\d+)\\s*" + re.escape(key), m)
+            qty_match = re.search(r"(\d+)\s*" + re.escape(key), m)
             qty = int(qty_match.group(1)) if qty_match else 1
             # avoid double counting dock/charging etc
             if key == "dock" and "charging" in m: continue
@@ -80,7 +80,7 @@ def backup_brain(msg):
             lines.append(f"{qty} x {key} = {price*qty} TZS")
     if total > 0:
         order = "\\n".join(lines) + f"\\nTOTAL: {total} TZS"
-        return {"reply": f"Sawa! Umecagua hivi:<br>{'<br>'.join(lines)}<br><b>TOTAL: {total} TZS</b><br><br>Lipa via M-Pesa to 0774311399 kisha bonyeza kitufe cha WhatsApp hapo chini ✅", "order": order}
+        return {"reply": f"Sawa! Umechagua hivi:<br>{'<br>'.join(lines)}<br><b>TOTAL: {total} TZS</b><br><br>Lipa via M-Pesa to 0774311399 kisha bonyeza kitufe cha WhatsApp hapo chini ✅", "order": order}
     return {"reply": "Nimekuelewa! Unataka nini hasa? Tuna Controller 120k, Headset 85k, Charging Dock 45k, Battery 30k, HDMI 25k, Thumb Grips 15k. Niambie mfano 'nataka controller'", "order": ""}
 
 def ask_ai(user_msg, name):
