@@ -50,6 +50,7 @@ small { display:block; text-align:center; margin-top:10px; color:#555; }
 var lastOrder = "";
 var lastName = "";
 function sendMsg(){
+alert("Button was clicked!");
   var n = document.getElementById('name').value || "Gamer";
   lastName = n;
   var m = document.getElementById('msg').value;
