@@ -84,7 +84,7 @@ def chat():
     total = 0
     for item, price in PRICES.items():
         # look for "2 controller" or "2 controllers" or "2 charging dock / docks"
-        pattern = r"(\\d+)\\s*" + re.escape(item) + r"s?"
+        pattern = r"(\d+)\s*" + re.escape(item) + r"s?"
         m = re.search(pattern, msg)
         if m:
             qty = int(m.group(1))
