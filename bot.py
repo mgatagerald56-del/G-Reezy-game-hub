@@ -1,9 +1,8 @@
 from flask import Flask, request, jsonify
-import os, re, json, urllib.request
+import os, json, urllib.request
 app = Flask(__name__)
 GROQ_KEY = os.environ.get("GROQ_API_KEY", "")
 MPESA_NUMBER = "0774311399"
-# You ONLY write this small list. AI understands the rest.
 PRODUCTS = """
 - Xbox Controller - 120000 TZS - for playing games, holding in hands
 - Xbox Headset - 85000 TZS - for hearing game sound, talking
@@ -35,12 +34,10 @@ a.share{display:block;width:100%;padding:12px;background:#25D366;color:white;bor
 <div class="box">
 <h1>🎮 G Reezy Game Hub</h1>
 <p style="text-align:center">Smart AI is LIVE - Talk like a human</p>
-<div class="chat" id="chat"><div class="bot"><b>Bot:</b> Karibu! Niambie unataka nini, hata kwa Kiswahili. Mfano: "Nataka kitu cha kucheza FIFA"</div></div>
-<form onsubmit="return sendMsg();">
+<div class="chat" id="chat"><div class="bot"><b>Bot:</b> Karibu! Niambie unataka nini, hata kwa Kiswahili.</div></div>
 <input id="name" placeholder="Your Name e.g. Eric">
 <input id="msg" placeholder="Type here..." style="margin-top:10px;">
-<button class="send" type="submit">Send ➤</button>
-</form>
+<button class="send" type="button" onclick="sendMsg()">Send ➤</button>
 <a class="wa" id="orderBtn" href="#" target="_blank">Send This Order to G Reezy on WhatsApp ✅</a>
 <a class="share" id="shareBtn" href="#" target="_blank">Share hii link kwa WhatsApp 📱</a>
 <small style="display:block;text-align:center;margin-top:10px">Pay via M-Pesa to 0774311399</small>
@@ -50,13 +47,16 @@ var lastOrder = "";
 function sendMsg(){
   var n = document.getElementById('name').value || "Gamer";
   var m = document.getElementById('msg').value;
-  if(!m){ return false; }
+  if(!m){ alert("Type something first"); return; }
   var chat = document.getElementById('chat');
   chat.innerHTML += '<div class="user"><b>' + n + ':</b> ' + m + '</div>';
   document.getElementById('msg').value = "";
+  chat.innerHTML += '<div class="bot" id="thinking">Bot is thinking...</div>';
   fetch('/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name:n, message:m})})
   .then(function(r){ return r.json(); })
   .then(function(d){
+    var t = document.getElementById('thinking');
+    if(t){ t.remove(); }
     chat.innerHTML += '<div class="bot"><b>Bot:</b> ' + d.reply + '</div>';
     chat.scrollTop = chat.scrollHeight;
     if(d.order){
@@ -67,9 +67,13 @@ function sendMsg(){
       btn.style.display = "block";
     }
   })
-  .catch(function(e){ chat.innerHTML += '<div class="bot">Error: ' + e + ' - Check internet / Render</div>'; });
-  return false;
+  .catch(function(e){
+    var t2 = document.getElementById('thinking');
+    if(t2){ t2.remove(); }
+    chat.innerHTML += '<div class="bot">Error: ' + e + '</div>';
+  });
 }
+document.getElementById('msg').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ sendMsg(); } });
 var link = window.location.href;
 document.getElementById('shareBtn').href = 'https://wa.me/?text=' + encodeURIComponent('Check G Reezy Game Hub 🎮 ' + link);
 </script>
@@ -83,7 +87,7 @@ Products and prices:
 Rules:
 - Understand typos, Swahili, slang. "kitu cha kucheza" = controller, "sauti" = headset, "kuchaji" = charging dock.
 - If user asks price, list prices.
-- If user wants to order, calculate TOTAL. Example: 2 controllers = 240000.
+- If user wants to order, calculate TOTAL.
 - If user says "nina 200k" suggest what they can afford.
 - Always end order with: Pay via M-Pesa to 0774311399 and tap WhatsApp button.
 - Return ONLY JSON like: {{"reply": "your reply with <br> for lines", "order": "2 x controller = 240000 TZS\\nTOTAL: 240000 TZS" or "" if no order}}
@@ -91,10 +95,9 @@ User name: {name}
 """
     data = {"model": "llama-3.1-8b-instant", "messages": [{"role": "system", "content": system}, {"role": "user", "content": user_msg}], "temperature": 0.3}
     req = urllib.request.Request("https://api.groq.com/openai/v1/chat/completions", data=json.dumps(data).encode(), headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=15) as resp:
+    with urllib.request.urlopen(req, timeout=20) as resp:
         out = json.loads(resp.read())
         txt = out["choices"][0]["message"]["content"]
-        # AI sometimes adds ```json, clean it
         txt = txt.replace("```json","").replace("```","").strip()
         return json.loads(txt)
 @app.route('/')
@@ -111,7 +114,7 @@ def chat():
         result = ask_ai(msg, name)
         return jsonify(result)
     except Exception as e:
-        return jsonify({"reply": f"AI amechoka kidogo, jaribu tena. Error: {str(e)[:100]}", "order": ""})
+        return jsonify({"reply": f"AI amechoka kidogo, jaribu tena. Error: {str(e)[:120]}", "order": ""})
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
